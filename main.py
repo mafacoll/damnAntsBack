@@ -3,6 +3,14 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, List, Optional
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+
+from database import SessionLocal, engine
+from models import Base, User
+from auth import hash_password
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -141,3 +149,33 @@ def register(data: RegisterRequest):
     }
 
     return {"message": "User created"}
+
+
+# dependencia DB
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@app.get("/")
+def root():
+    return {"message": "API funcionando"}
+
+
+@app.post("/register")
+def register(username: str, email: str, password: str, db: Session = Depends(get_db)):
+
+    user = User(
+        username=username,
+        email=email,
+        password_hash=hash_password(password)
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {"message": "Usuario creado"}
