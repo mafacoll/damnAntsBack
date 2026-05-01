@@ -5,6 +5,10 @@ DATABASE_URL = "postgresql://postgres:sort12@localhost:5432/damn_ants_db"
 
 engine = create_engine(DATABASE_URL)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
 Base = declarative_base()
