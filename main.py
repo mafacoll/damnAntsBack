@@ -9,19 +9,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# 🌍 CORS (IMPORTANTE)
+#  que paginas permite
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # 👈 mejor que "*"
+    allow_origins=["http://localhost:5173"],  # mejor que "*"
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 🧱 tablas
+# tablas
 Base.metadata.create_all(bind=engine)
 
-# 🔌 DB
+# DB
 def get_db():
     db = SessionLocal()
     try:
@@ -30,9 +30,8 @@ def get_db():
         db.close()
 
 
-# 👤 USER HELPERS
+# USER HELPERS
 def get_current_user(user_id: int, db: Session):
-    print("🔥 HEADER user_id:", user_id)
 
     user = db.query(User).filter(User.id == user_id).first()
 
@@ -42,9 +41,7 @@ def get_current_user(user_id: int, db: Session):
     return user
 
 
-# ======================
 # LOGIN
-# ======================
 @app.post("/login")
 def login(data: UserLogin, db: Session = Depends(get_db)):
 
@@ -77,7 +74,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         username=user.username,
         email=user.email,
-        password_hash=user.password,  # sin encriptar (como quieres ahora)
+        password_hash=user.password,  
         birth_date=user.birth_date,
         is_admin=False
     )
@@ -179,33 +176,28 @@ def delete_user(
     return {"message": "Usuario eliminado"}
 
 
-# ======================
 # TRANSACTIONS (GET)
-# ======================
 @app.get("/transactions")
 def get_transactions(
     user_id: int = Header(..., alias="user-id"),
     db: Session = Depends(get_db)
 ):
-    print("🔥 GET TRANSACTIONS HIT")
-    print("🔥 user_id:", user_id)
 
-    # 🔐 Validar usuario
+    # Validar usuario
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(status_code=401, detail="No autorizado")
 
-    # 📊 Obtener transacciones del usuario
+    # Obtener transacciones del usuario
     transactions = (
         db.query(Transaction)
         .filter(Transaction.user_id == user.id)
         .all()
     )
 
-    print("🔥 FOUND:", len(transactions))
 
-    # 📦 Devolver lista
+    # Devolver lista
     return [
         {
             "id": t.id,
@@ -219,16 +211,13 @@ def get_transactions(
     ]
     
 
-# ======================
 # TRANSACTIONS (POST)
-# ======================
 @app.post("/transactions")
 def create_transaction(
     data: TransactionCreate,
     user_id: int = Header(..., alias="user-id"),
     db: Session = Depends(get_db)
 ):
-    print("🔥 CREATE TRANSACTION HIT")
 
     # 🔐 Validar usuario
     user = db.query(User).filter(User.id == user_id).first()
@@ -253,7 +242,6 @@ def create_transaction(
     db.commit()
     db.refresh(transaction)
 
-    print("✅ TRANSACTION CREATED:", transaction.id)
 
     return transaction
 
